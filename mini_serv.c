@@ -7,7 +7,7 @@
 #include <sys/select.h>
 #include <fcntl.h>
 
-typdef struct s_client
+typedef struct s_client
 {
 	int	id;
 	int	fd;
@@ -19,5 +19,43 @@ fd_set	fd_all;
 fd_set	fd_rd;
 fd_set	fd_wr;
 
+void	exit_error(char *str, t_client *client_lst)
+{
+	t_client	*tmp;
+	
+	tmp = client_lst;
+	while (client_lst)
+	{
+		tmp = tmp->next;
+		close(client_lst->fd);
+		free(client_lst->buffer);
+		free(client_lst);
+		client_lst = tmp;
+	}
+	write(STDERR_FILENO, str, strlen(str));
+	exit(1);
+}
 
+int main(int ac, char **av)
+{
+	int	port, sockfd;
+	struct	sockaddr_in	servaddr;
+	
+	if (ac < 2)
+		exit_error("Wrong number of arguments\n", NULL);
+	port = atoi(av[1]);
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd == -1)
+		exit_error("Fatal Error\n", NULL);
+	bzero(&servaddr, sizeof(servaddr));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_addr.s_addr = htonl(2130706433);
+	servaddr.sin_port = htons(port);
+	if (bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)))
+		exit_error("Fatal Error\n", NULL);
+	if (listen(sockfd, 10) != 0)
+		exit_error("Fatal Error\n", NULL);
+	//handle_server(sockfd);
+	return 0;
+}
 
