@@ -36,6 +36,35 @@ void	exit_error(char *str, t_client *client_lst)
 	exit(1);
 }
 
+void	handle_server(int sockfd)
+{
+	int	connfd, maxfd, client_fd;
+	t_client	*client_lst;
+
+	FD_ZERO(&fd_all);
+	FD_SET(sockfd, &fd_all);
+	maxfd = sockfd;
+	client_lst = 0;
+	while (1)
+	{
+		fd_rd = fd_all;
+		fd_wr = fd_all;
+		if (select(maxfd + 1, &fd_rd, &fd_wr, NULL, NULL) < 0)
+			continue ;
+		else if (FD_ISSET(sockfd, &fd_rd))
+		{
+			connfd = accept(sockfd, NULL, NULL);
+			if (connfd >= 0)
+			{
+			//	client_lst = add_newclient(client_lst, connfd, client_fd);
+				maxfd = connfd > maxfd ? connfd : maxfd;
+				++client_fd;
+			}
+		}
+		//else
+		//	client_lst = handle_client(client_lst);
+	}
+}
 int main(int ac, char **av)
 {
 	int	port, sockfd;
@@ -55,7 +84,7 @@ int main(int ac, char **av)
 		exit_error("Fatal Error\n", NULL);
 	if (listen(sockfd, 10) != 0)
 		exit_error("Fatal Error\n", NULL);
-	//handle_server(sockfd);
+	handle_server(sockfd);
 	return 0;
 }
 
