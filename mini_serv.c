@@ -36,6 +36,36 @@ void	exit_error(char *str, t_client *client_lst)
 	exit(1);
 }
 
+void	send_message(char *msg, t_client *client_lst, t_client *sender)
+{
+	while (client_lst)
+	{
+		if (client_lst != sender && FD_ISSET(client_lst->fd, &fd_wr))
+			send(client_lst->fd, msg, strlen(msg), 0);
+		client_lst = client_lst->next;
+	}
+}
+
+t_client	*add_newclient(t_client *client_lst, int fd, int id)
+{
+	t_client	*newcli, *last;
+	char		str[1000];
+	
+	newcli->id = id;
+	newcli->fd = fd;
+	newcli->buffer = NULL;
+	newcli->next = NULL;
+	FD_SET(fd, &fd_all);
+	sprintf(str, "server: client %d just arrived\n", id);
+	send_message(str, client_lst, newcli);
+	if (!client_lst)
+		return (newcli);
+	last = client_lst;
+	while (last->next)
+		last = last->next;
+	last->next = newcli;
+	return (client_lst);
+}
 void	handle_server(int sockfd)
 {
 	int	connfd, maxfd, client_fd;
@@ -56,7 +86,7 @@ void	handle_server(int sockfd)
 			connfd = accept(sockfd, NULL, NULL);
 			if (connfd >= 0)
 			{
-			//	client_lst = add_newclient(client_lst, connfd, client_fd);
+				client_lst = add_newclient(client_lst, connfd, client_fd);
 				maxfd = connfd > maxfd ? connfd : maxfd;
 				++client_fd;
 			}
