@@ -50,7 +50,10 @@ t_client	*add_newclient(t_client *client_lst, int fd, int id)
 {
 	t_client	*newcli, *last;
 	char		str[1000];
-	
+
+	newcli = (t_client *)malloc(sizeof(t_client));
+	if (!newcli)
+		exit_error("Fatal Error\n", client_lst);	
 	newcli->id = id;
 	newcli->fd = fd;
 	newcli->buffer = NULL;
@@ -67,25 +70,24 @@ t_client	*add_newclient(t_client *client_lst, int fd, int id)
 	return (client_lst);
 }
 
-char	*str_join(char *s1, char *s2)
+char	*str_join(char *buf, char *add)
 {
-	char *join;
-	int	i;
-	int	j;
+	char	*newbuf;
+	int	len;
 
-	i = 0;
-	j = 0;
-	join = malloc(sizeof(char) * strlen(s1) + strlen(s2) + 1);
-	if (!join)
-		return NULL;
-	while (s1[i])
-		join[j++] = s1[i++];
-	i = 0;
-	while(s2[i])
-		join[j++] = s2[i++];
-	join[j] = 0;
-	free(s1);
-	return (join);
+	if (*buf = 0)
+		len = 0;
+	else
+		len = strlen(buf);
+	newbuf = malloc(sizeof(*newbuf) * (len + strlen(add) + 1));
+	if (newbuf == 0)
+		return (0);
+	newbuf[0] = 0;
+	if (buf != 0)
+		strcat(newbuf, buf);
+	free(buf);
+	strcat(newbuf, add);
+	return (newbuf);
 }
 
 ssize_t	receive_message(t_client *client_lst, t_client *curr_cli)
@@ -109,7 +111,7 @@ ssize_t	receive_message(t_client *client_lst, t_client *curr_cli)
 
 t_client	*remove_client(t_client *client_lst, t_client *rmcli)
 {
-	char	str[1000];
+	char		str[1000];
 	t_client	*prev;
 
 	if (client_lst == rmcli)
@@ -159,8 +161,8 @@ int	extract_message(char **buf, char **msg)
 
 t_client	*handle_client(t_client *client_lst)
 {
-	char	*msg, *str;
-	ssize_t	ret;
+	char		*msg, *str;
+	ssize_t		ret;
 	t_client	*it, *curr_cli;
 
 	it = client_lst;
@@ -194,13 +196,14 @@ t_client	*handle_client(t_client *client_lst)
 
 void	handle_server(int sockfd)
 {
-	int	connfd, maxfd, client_fd;
+	int	connfd, maxfd, client_id;
 	t_client	*client_lst;
 
 	FD_ZERO(&fd_all);
 	FD_SET(sockfd, &fd_all);
+	client_lst = NULL;
 	maxfd = sockfd;
-	client_lst = 0;
+	client_id = 0;
 	while (1)
 	{
 		fd_rd = fd_all;
@@ -212,9 +215,9 @@ void	handle_server(int sockfd)
 			connfd = accept(sockfd, NULL, NULL);
 			if (connfd >= 0)
 			{
-				client_lst = add_newclient(client_lst, connfd, client_fd);
+				client_lst = add_newclient(client_lst, connfd, client_id);
 				maxfd = connfd > maxfd ? connfd : maxfd;
-				++client_fd;
+				++client_id;
 			}
 		}
 		else
@@ -242,6 +245,6 @@ int main(int ac, char **av)
 	if (listen(sockfd, 10) != 0)
 		exit_error("Fatal Error\n", NULL);
 	handle_server(sockfd);
-	return 0;
+	return (0);
 }
 
