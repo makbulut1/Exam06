@@ -75,7 +75,7 @@ char	*str_join(char *buf, char *add)
 	char	*newbuf;
 	int	len;
 
-	if (*buf = 0)
+	if (buf == 0)
 		len = 0;
 	else
 		len = strlen(buf);
